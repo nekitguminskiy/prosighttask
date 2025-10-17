@@ -346,4 +346,3 @@ docker compose exec app php ./vendor/bin/phpstan analyse
 The application automatically seeds the database with data from `database/seeders/salesmen.csv` on startup.
 
 For starting of project  execute: docker compose up
-"# prosighttask" 
