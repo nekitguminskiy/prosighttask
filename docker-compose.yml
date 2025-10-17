@@ -1,0 +1,29 @@
+name: prosighttask
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: prosighttask_app
+    restart: unless-stopped
+    working_dir: /var/www/html
+    ports:
+      - "8000:80"
+    volumes:
+      - ./:/var/www/html
+    depends_on:
+      - db
+
+  db:
+    image: postgres:15-alpine
+    container_name: prosighttask_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: prosighttask
+      POSTGRES_USER: prosighttask
+      POSTGRES_PASSWORD: password
+    volumes:
+      - ./docker/postgres/data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"

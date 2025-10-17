@@ -1,0 +1,639 @@
+openapi: 3.0.3
+info:
+  version: 0.0.1-v2025-10-09
+  title: Salesmen API
+  description:
+    <br/><hr/>**Task definition**
+    The goal of your task is to create an application that implements the routes described in this API specification. Please use php and Laravel framework. When implementing the solution, please use the Postgres database to store the salesmen data.<br /><br />
+    We expect that part of the solution will be the initial filling of the database with records from the salesmen.csv file. <br /><br />
+    Please validate POST and PUT operations against existing codelists on the gender, marital_status, titles_before and titles_after parameters. Please concatenate titles, first name and last name from values stored in DB into display_name parameter in response. Don't forget to implement query parameters in GET /salesmen calls.<br /><br />
+    Demonstrate naming conventions, code structure, and your ability to think abstractly.<br/><br/>
+    Type checking should be at PHPStan level 9 or 10.<br/><br/>
+    Solution should showcase all the best practices you know.<br/><br/>
+    Send us the source code along with instructions for installing and running the application.<br/><br/>
+    We would also welcome the functional application on a publicly accessible URL and sending a link.
+    <hr/>
+
+  license:
+    name: Copyright © 2023 PROSIGHT Slovensko a.s.
+
+servers:
+  - url: https://yoururl.sk
+    description: Your server
+
+paths:
+  /salesmen:
+    post:
+      summary: Create a new salesman.
+      operationId: createNewSalesman
+      tags:
+        - Salesmen operations
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SalesmanRequest'
+      responses:
+        201:
+          description: New salesman was created successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SingleSalesmanResponse'
+        400:
+          description: Couldn't create a salesman. Bad format of input data.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InputDataBadFormatErrorResponse'
+        409:
+          description: Couldn't create a salesman. Salesman already exists.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExistsErrorResponse'
+        416:
+          description: Couldn't create a salesman. Input data out of range.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InputDataOutOfRangeErrorResponse'
+    get:
+      summary: Query for multiple salesmen.
+      operationId: querySalesman
+      tags:
+        - Salesmen operations
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+          example: 5
+          description: An offset to search from. E.g. page 5 would mean give me the fifth page that matches the search criteria.
+
+        - in: query
+          name: per_page
+          schema:
+            type: integer
+          example: 10
+          description: Number of results to be returned in this particular query for 1 page.
+
+        - in: query
+          name: sort
+          schema:
+            type: string
+          example: "-created_at"
+          description: Sort query - name means order by name asc, -name means order by name desc
+      responses:
+        200:
+          description: Salesmen retrieved.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MultipleSalesmenResponse"
+        400:
+          description: Bad request.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BadRequestErrorResponse"
+
+  /salesmen/{salesman_uuid}:
+    put:
+      summary: Update particular salesman.
+      operationId: updateSalesman
+      tags:
+        - Salesmen operations
+      parameters:
+        - in: path
+          name: salesman_uuid
+          required: true
+          schema:
+            type: string
+            format: uuid
+          example: "8596cc61-4e84-4c19-afcc-fda21e5c68ff"
+          description: "UUID of salesman"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SalesmanRequest'
+      responses:
+        200:
+          description: Salesman updated successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SingleSalesmanResponse'
+        400:
+          description: Couldn't update a salesman. Bad format of input data.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InputDataBadFormatErrorResponse'
+        416:
+          description: Couldn't update a salesman. Input data out of range.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InputDataOutOfRangeErrorResponse'
+
+    get:
+      summary: Retrieve particular salesman.
+      operationId: queryParticularSalesman
+      tags:
+        - Salesmen operations
+      parameters:
+        - in: path
+          name: salesman_uuid
+          required: true
+          schema:
+            type: string
+            format: uuid
+            example: "8596cc61-4e84-4c19-afcc-fda21e5c68ff"
+      responses:
+        200:
+          description: Salesmen retrieved successfully.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SingleSalesmanResponse"
+        400:
+          description: Bad request.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BadRequestErrorResponse"
+        404:
+          description: Salesman not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotFoundErrorResponse"
+
+    delete:
+      summary: Delete particular salesman.
+      operationId: deleteParticularSalesman
+      tags:
+        - Salesmen operations
+      parameters:
+        - in: path
+          name: salesman_uuid
+          required: true
+          schema:
+            type: string
+            format: uuid
+          example: "8596cc61-4e84-4c19-afcc-fda21e5c68ff"
+          description: "UUID of salesman"
+
+      responses:
+        204:
+          description: Salesman deleted successfully.
+        404:
+          description: Salesman not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotFoundErrorResponse"
+
+  /codelists:
+    get:
+      summary: Query for general codelists.
+      operationId: queryCodelist
+      tags:
+        - Codelists operations
+      responses:
+        200:
+          description: Codelists retrieved.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CodelistsResponse"
+        400:
+          description: Bad request.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BadRequestErrorResponse"
+
+
+components:
+  schemas:
+    MultipleSalesmenResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/SalesmanItem'
+        links:
+          type: object
+          properties:
+            first:
+              type: string
+              nullable: true
+              example: "/salesmen?page=1"
+            last:
+              type: string
+              nullable: true
+              example: "/salesmen?page=5"
+            prev:
+              type: string
+              nullable: true
+              example: "/salesmen?page=2"
+            next:
+              type: string
+              nullable: true
+              example: "/salesmen?page=4"
+
+    SingleSalesmanResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/SalesmanItem'
+
+    SalesmanItem:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "8596cc61-4e84-4c19-afcc-fda21e5c68ff"
+          description: "ID of salesman"
+        self:
+          type: string
+          example: "/salesmen/8596cc61-4e84-4c19-afcc-fda21e5c68ff"
+          description: "reference to self"
+        first_name:
+          type: string
+          example: "John"
+          description: "First name of salesman"
+        last_name:
+          type: string
+          example: "Rambo"
+          description: "Last name of salesman"
+        display_name:
+          type: string
+          example: "Ing. Janko Hraško Phd."
+          description: "Name of salesman with titles before and after his name"
+        titles_before:
+          type: array
+          nullable: true
+          uniqueItems: true
+          minItems: 0
+          maxItems: 10
+          items:
+            type: string
+            example: "Ing."
+            description: "Title before name"
+        titles_after:
+          type: array
+          nullable: true
+          uniqueItems: true
+          minItems: 0
+          maxItems: 10
+          items:
+            type: string
+            example: "PhD."
+            description: "Title after name"
+        prosight_id:
+          type: string
+          example: "12345"
+          description: "5-digit internal identification code"
+        email:
+          type: string
+          example: "john.rambo@prosight.com"
+          description: "email"
+        phone:
+          type: string
+          example: "+421123456789"
+          description: "phone number"
+        gender:
+          type: string
+          example: "m"
+          description: "Code of gender"
+        marital_status:
+          type: string
+          example: "single"
+          description: "Code of marital status"
+        created_at:
+          type: string
+          format: date-time
+          example: "2020-09-30T12:15:28.000+02:00"
+          description: "Date and time of salesman creation"
+        updated_at:
+          type: string
+          format: date-time
+          example: "2021-09-30T12:15:28.000+02:00"
+          description: "Date and time of last change on entity salesman"
+
+    SalesmanRequest:
+      properties:
+        first_name:
+          nullable: false
+          type: string
+          minLength: 2
+          maxLength: 50
+          example: "John"
+          description: "First name"
+        last_name:
+          nullable: false
+          type: string
+          minLength: 2
+          maxLength: 50
+          example: "Rambo"
+          description: "Last name"
+        titles_before:
+          type: array
+          nullable: true
+          uniqueItems: true
+          minItems: 0
+          maxItems: 10
+          items:
+            type: string
+            minLength: 2
+            maxLength: 10
+            example: "Ing."
+            description: "Title before"
+        titles_after:
+          type: array
+          nullable: true
+          uniqueItems: true
+          minItems: 0
+          maxItems: 10
+          items:
+            type: string
+            minLength: 2
+            maxLength: 10
+            example: "PhD."
+            description: "Title after"
+        prosight_id:
+          nullable: false
+          type: string
+          minLength: 5
+          maxLength: 5
+          example: "12345"
+          description: "5-digit internal identification code"
+        email:
+          nullable: false
+          type: string
+          example: "john.rambo@prosight.com"
+          description: "email"
+        phone:
+          nullable: true
+          type: string
+          example: "+421123456789"
+          description: "phone number"
+        gender:
+          nullable: false
+          type: string
+          example: "m"
+          description: "Code of gender"
+        marital_status:
+          nullable: true
+          type: string
+          example: "single"
+          description: "Code of marital status"
+
+    CodelistsResponse:
+      type: object
+      properties:
+        marital_statuses:
+          type: array
+          items:
+            $ref: '#/components/schemas/MaritalStatuses'
+        genders:
+          type: array
+          items:
+            $ref: '#/components/schemas/Genders'
+        titles_before:
+          type: array
+          items:
+            $ref: '#/components/schemas/TitlesBefore'
+        titles_after:
+          type: array
+          items:
+            $ref: '#/components/schemas/TitlesAfter'
+
+    ExistsErrorResponse:
+      properties:
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/ExistsError'
+
+    BadRequestErrorResponse:
+      properties:
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/BadRequestError'
+
+    NotFoundErrorResponse:
+      properties:
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/NotFoundError'
+
+    InputDataBadFormatErrorResponse:
+      properties:
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/InputDataBadFormatError'
+
+    InputDataOutOfRangeErrorResponse:
+      properties:
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/InputDataOutOfRangeError'
+
+    MaritalStatuses:
+      properties:
+        code:
+          type: string
+          enum:
+            - single
+            - married
+            - divorced
+            - widowed
+        name:
+          type: object
+          properties:
+            m:
+              type: string
+              enum:
+                - slobodný
+                - ženatý
+                - rozvedený
+                - vdovec
+            f:
+              type: string
+              enum:
+                - slobodná
+                - vydatá
+                - rozvedená
+                - vdova
+            general:
+              type: string
+              enum:
+                - slobodný / slobodná
+                - ženatý / vydatá
+                - rozvedený / rozvedená
+                - vdovec / vdova
+
+    Genders:
+      properties:
+        code:
+          type: string
+          enum:
+            - m
+            - f
+        name:
+          type: string
+          enum:
+            - muž
+            - žena
+
+    TitlesBefore:
+      properties:
+        code:
+          type: string
+          enum:
+            - Bc.
+            - Mgr.
+            - Ing.
+            - JUDr.
+            - MVDr.
+            - MUDr.
+            - PaedDr.
+            - prof.
+            - doc.
+            - dipl.
+            - MDDr.
+            - Dr.
+            - Mgr. art.
+            - ThLic.
+            - PhDr.
+            - PhMr.
+            - RNDr.
+            - ThDr.
+            - RSDr.
+            - arch.
+            - PharmDr.
+        name:
+          type: string
+          enum:
+            - Bc.
+            - Mgr.
+            - Ing.
+            - JUDr.
+            - MVDr.
+            - MUDr.
+            - PaedDr.
+            - prof.
+            - doc.
+            - dipl.
+            - MDDr.
+            - Dr.
+            - Mgr. art.
+            - ThLic.
+            - PhDr.
+            - PhMr.
+            - RNDr.
+            - ThDr.
+            - RSDr.
+            - arch.
+            - PharmDr.
+
+    TitlesAfter:
+      properties:
+        code:
+          type: string
+          enum:
+            - CSc.
+            - DrSc.
+            - PhD.
+            - ArtD.
+            - DiS
+            - DiS.art
+            - FEBO
+            - MPH
+            - BSBA
+            - MBA
+            - DBA
+            - MHA
+            - FCCA
+            - MSc.
+            - FEBU
+            - LL.M
+
+        name:
+          type: string
+          enum:
+            - CSc.
+            - DrSc.
+            - PhD.
+            - ArtD.
+            - DiS
+            - DiS.art
+            - FEBO
+            - MPH
+            - BSBA
+            - MBA
+            - DBA
+            - MHA
+            - FCCA
+            - MSc.
+            - FEBU
+            - LL.M
+
+    NotFoundError:
+      properties:
+        code:
+          type: string
+          example: PERSON_NOT_FOUND
+        message:
+          type: string
+          example: Object_name with such uuid not found. [Salesman "8596cc61-4e84-4c19-afcc-fda21e5c68ff" not found.]
+
+    ExistsError:
+      properties:
+        code:
+          type: string
+          example: PERSON_ALREADY_EXISTS
+        message:
+          type: string
+          example: Object_name with such {parameter_name} {parameter_value} is already registered.
+
+    InputDataBadFormatError:
+      properties:
+        code:
+          type: string
+          example: INPUT_DATA_BAD_FORMAT
+        message:
+          type: string
+          example: Bad format of input data. Field {parameter_name} {parameter_value} must be of type {parameter_type}.
+
+    InputDataOutOfRangeError:
+      properties:
+        code:
+          type: string
+          example: INPUT_DATA_OUT_OF_RANGE
+        message:
+          type: string
+          example: Input data out of range. Field {parameter_name}  of value {parameter_value} is out of range. Acceptable range for this field is {parameter_range}.
+
+    BadRequestError:
+      properties:
+        code:
+          type: string
+          example: BAD_REQUEST
+        message:
+          type: string
+          example: Query execution failed.
+

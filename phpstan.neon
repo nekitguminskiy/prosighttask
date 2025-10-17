@@ -1,0 +1,16 @@
+includes:
+    - ./vendor/larastan/larastan/extension.neon
+
+parameters:
+        level: 10
+        paths:
+            - app
+            - database
+            - routes
+            - tests
+
+        ignoreErrors:
+            # Ignore test-related type issues
+            - '#Cannot access offset.*on mixed#'
+            - '#Parameter.*expects.*mixed given#'
+            - '#Call to method PHPUnit.*will always evaluate to true#'
